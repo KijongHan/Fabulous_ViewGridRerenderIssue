@@ -11,38 +11,51 @@ open System
 open System.IO
 
 module App = 
+    type Page =
+        | One
+        | Two
+
     type Model = 
-      { RenderButton: bool }
+      { Page: Page }
 
-    type Msg = | RenderButton
+    type Msg = 
+        | RenderOne
+        | RenderTwo
 
-    let initModel = { RenderButton = false }
+    let initModel = { Page = One }
 
     let init () = initModel, Cmd.none
 
     let update msg model =
         match msg with
-        | RenderButton ->
-            { model with RenderButton = true }, Cmd.none
+        | RenderOne ->
+            { model with Page = One }, Cmd.none
+        | RenderTwo ->
+            { model with Page = Two }, Cmd.none
 
     let view (model: Model) dispatch =
-        View.ContentPage(
-            content = View.Grid(
-                coldefs = [Star; Stars 25.; Star],
-                rowdefs = [Auto; Auto; Auto; Auto; Auto; Auto],
-                children = [
-                    yield View.Label(text = "Test Label").Row(0).Column(1)
-                    yield View.Label(text = "Test Label").Row(1).Column(1)
-                    if model.RenderButton then
-                        yield View.Button(text = "Test Button").Row(2).Column(1)
-                    else
-                        yield View.Label(text = "Test Label").Row(2).Column(1)
-                    yield View.Label(text = "Test Label").Row(3).Column(1)
-                    yield View.Label(text = "Test Label").Row(4).Column(1)
-                    yield View.Button(text = "Render", command = (fun () -> dispatch RenderButton)).Row(5).Column(1)
-                ]
+        match model.Page with
+        | One ->
+            View.ContentPage(
+                content = View.Grid(
+                    coldefs = [Star; Stars 25.; Star],
+                    rowdefs = [Auto; Auto],
+                    children = [
+                        yield View.Label(text = "Page One").Row(0).Column(1)
+                        yield View.Button(text = "Change", command = (fun () -> dispatch RenderTwo)).Row(1).Column(1)
+                    ]
+                )
             )
-        )
+        | Two ->
+            View.ContentPage(
+                content = View.Grid(
+                    rowdefs = [Auto; Auto],
+                    children = [
+                        yield View.Label(text = "Page Two").Row(0)
+                        yield View.Button(text = "Change", command = (fun () -> dispatch RenderOne)).Row(1)
+                    ]
+                )
+            )
 
     // Note, this declaration is needed if you enable LiveUpdate
     let program = Program.mkProgram init update view
